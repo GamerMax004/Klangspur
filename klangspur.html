@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050409">
+<title>Errate den Song</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#050409;
+    --bg-1:#0A0812;
+    --card:rgba(255,255,255,0.035);
+    --card-border:rgba(255,255,255,0.08);
+    --accent:#8B5CF6;
+    --accent-2:#C4A6FF;
+    --accent-soft:rgba(139,92,246,0.35);
+    --good:#34D9A0;
+    --bad:#F86B7A;
+    --text-0:#F3F1FA;
+    --text-1:#9C93B8;
+    --text-2:#5C5573;
+    --easy:#2DD4BF;
+    --medium:#D6B486;
+    --hard:#E0767A;
+    --expert:#F0568F;
+    --impossible:#A855F7;
+    --radius-lg:26px;
+    --radius-md:16px;
+    --radius-sm:10px;
+    --ff-display:'Space Grotesk', 'Inter', sans-serif;
+    --ff-body:'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%;}
+  body{
+    font-family:var(--ff-body);
+    color:var(--text-0);
+    background:
+      radial-gradient(1100px 700px at 50% -8%, rgba(255,255,255,0.035), transparent 62%),
+      var(--bg-0);
+    min-height:100vh;
+    min-height:100dvh;
+    overflow-x:hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  #app{
+    max-width:560px;
+    margin:0 auto;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:26px 18px 40px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  main{flex:1; display:flex; flex-direction:column;}
+  .screen{display:none; flex-direction:column; flex:1;}
+  .screen.active{display:flex;}
+  .fade-in{animation:fadeIn .5s ease both;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:var(--radius-lg);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+
+  /* -------- start screen -------- */
+  .hero{ text-align:center; margin:8px 0 26px; }
+  .hero h1{
+    font-family:var(--ff-display);
+    font-size:clamp(26px, 6vw, 34px);
+    line-height:1.1;
+    margin:0 0 10px;
+    color:var(--text-0);
+  }
+  .hero h1 span{color:var(--accent-2);}
+  .hero p{margin:0; color:var(--text-1); font-size:14.5px; line-height:1.55; max-width:420px; margin:0 auto;}
+
+  .section-label{
+    font-family:var(--ff-display); font-size:12px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--text-2); margin:22px 2px 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-label::after{content:''; flex:1; height:1px; background:var(--card-border);}
+
+  .genre-grid{
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;
+  }
+  .genre-btn{
+    display:flex; align-items:center; gap:10px;
+    padding:14px 14px;
+    border-radius:var(--radius-md);
+    border:1px solid var(--card-border);
+    background:var(--card);
+    color:var(--text-0);
+    font-family:var(--ff-body); font-weight:600; font-size:14px;
+    cursor:pointer; text-align:left;
+    transition:border-color .18s, transform .12s, background .18s;
+  }
+  .genre-btn .dot{width:10px; height:10px; border-radius:50%; flex:none;}
+  .genre-btn:hover{border-color:var(--accent-soft); transform:translateY(-1px);}
+  .genre-btn.selected{
+    border-color:var(--accent);
+    background:rgba(139,92,246,0.10);
+    box-shadow:0 0 0 1px var(--accent) inset, 0 8px 24px -8px var(--accent-soft);
+  }
+
+  .start-btn{
+    margin-top:28px;
+    width:100%;
+    padding:16px;
+    border:none; border-radius:999px;
+    font-family:var(--ff-display); font-weight:700; font-size:16px; letter-spacing:0.02em;
+    color:#050409;
+    background:linear-gradient(120deg, var(--accent-2), var(--accent));
+    cursor:pointer;
+    box-shadow:0 10px 30px -8px var(--accent-soft);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .start-btn:active{transform:scale(0.98);}
+  .start-btn:disabled{opacity:0.5; cursor:not-allowed;}
+  .start-btn.loading .label{display:none;}
+  .start-btn .spinner{display:none;}
+  .start-btn.loading .spinner{display:inline-block;}
+  .spinner{
+    width:18px; height:18px; border-radius:50%;
+    border:2.5px solid rgba(5,4,9,0.25); border-top-color:#050409;
+    animation:spin .7s linear infinite; vertical-align:middle;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* -------- game screen -------- */
+  .game-head{
+    display:flex; align-items:center; margin-bottom:16px;
+  }
+  .chip-btn{
+    display:flex; align-items:center; gap:6px;
+    padding:7px 12px; border-radius:999px;
+    background:var(--card); border:1px solid var(--card-border);
+    color:var(--text-1); font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .chip-btn:hover{color:var(--text-0); border-color:var(--accent-soft);}
+  .chip-btn svg{width:12px; height:12px;}
+
+  .tier-ladder{
+    display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin-bottom:8px;
+  }
+  .tier-ladder::-webkit-scrollbar{display:none;}
+  .tier-step{
+    flex:none; display:flex; align-items:center; gap:5px;
+    padding:8px 13px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,0.12);
+    font-family:var(--ff-display); font-weight:700; font-size:12px;
+    color:var(--text-2);
+    transition:all .25s;
+  }
+  .tier-step .chk{width:11px; height:11px;}
+  .tier-step.locked{opacity:0.4;}
+  .tier-step.done{
+    color:var(--tier-color);
+    border-color:var(--tier-color);
+    background:rgba(255,255,255,0.03);
+  }
+  .tier-step.current{
+    color:#050409;
+    background:var(--tier-color);
+    border-color:var(--tier-color);
+    box-shadow:0 0 18px -2px var(--tier-color);
+    transform:scale(1.05);
+  }
+  .tier-caption{font-size:12px; color:var(--text-2); margin:0 2px 18px;}
+
+  .game-card{padding:22px 20px 26px; margin-top:6px;}
+
+  .dots-row{
+    display:flex; justify-content:center; gap:10px; margin-bottom:22px; flex-wrap:wrap;
+  }
+  .dot-wrap{display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .dot{
+    width:11px; height:11px; border-radius:50%;
+    background:rgba(255,255,255,0.10);
+    border:1.5px solid rgba(255,255,255,0.16);
+    transition:all .25s;
+  }
+  .dot-wrap span{font-size:10px; color:var(--text-2); font-family:var(--ff-display);}
+  .dot.current{background:var(--accent); border-color:var(--accent); box-shadow:0 0 10px 2px var(--accent-soft); transform:scale(1.25);}
+  .dot.wrong{background:var(--bad); border-color:var(--bad);}
+  .dot.skipped{background:transparent; border-color:var(--text-2);}
+  .dot.correct{background:var(--good); border-color:var(--good); box-shadow:0 0 10px 2px rgba(52,217,160,0.5);}
+
+  .wf{
+    position:relative;
+    height:56px;
+    display:flex; align-items:center;
+    margin-bottom:8px;
+  }
+  .wf-layer{
+    position:absolute; inset:0;
+    display:flex; align-items:center; gap:3px;
+  }
+  .wf-layer.dim .wf-bar{background:rgba(255,255,255,0.12);}
+  .wf-layer.bright{
+    clip-path:inset(0 100% 0 0);
+  }
+  .wf-layer.bright .wf-bar{background:linear-gradient(180deg, var(--accent-2), var(--accent));}
+  .wf-bar{flex:1 0 3px; width:3px; border-radius:3px; min-width:3px;}
+
+  .wf-meta{display:flex; justify-content:space-between; font-family:var(--ff-display); font-size:11.5px; color:var(--text-2); margin-bottom:22px;}
+  .wf-meta b{color:var(--accent-2); font-weight:700;}
+
+  .play-zone{display:flex; flex-direction:column; align-items:center; margin-bottom:22px;}
+  .play-btn{
+    position:relative;
+    width:92px; height:92px; border-radius:50%;
+    border:none; cursor:pointer;
+    background:radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent) 65%);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08) inset, 0 14px 34px -10px var(--accent-soft);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s;
+  }
+  .play-btn:active{transform:scale(0.96);}
+  .play-btn svg{width:30px; height:30px; fill:#050409;}
+  .play-btn .ring{
+    position:absolute; inset:-14px; border-radius:50%;
+    border:1.5px solid var(--accent-soft); opacity:0; pointer-events:none;
+  }
+  .play-btn.playing .ring{animation:ringPulse 1.4s ease-out infinite;}
+  .play-btn.playing .ring:nth-child(2){animation-delay:.45s;}
+  @keyframes ringPulse{
+    0%{opacity:0.7; transform:scale(0.7);}
+    100%{opacity:0; transform:scale(1.5);}
+  }
+
+  .guess-history{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; min-height:0; margin-bottom:14px;
+  }
+  .hist-chip{
+    display:flex; align-items:center; gap:5px;
+    padding:5px 10px; border-radius:999px;
+    background:rgba(248,107,122,0.10); border:1px solid rgba(248,107,122,0.32);
+    font-size:11.5px; color:#FFC7CC;
+  }
+  .hist-chip svg{width:10px; height:10px; flex:none;}
+
+  .search-row{position:relative; display:flex; gap:8px;}
+  .confirm-btn{
+    display:none;
+    flex:none; width:50px; border-radius:var(--radius-sm);
+    border:none; cursor:pointer;
+    background:linear-gradient(120deg, var(--accent-2), var(--accent));
+    align-items:center; justify-content:center;
+  }
+  .confirm-btn.show{display:flex;}
+  .confirm-btn svg{width:18px; height:18px; fill:#050409;}
+  .search-field{
+    flex:1; position:relative;
+    display:flex; align-items:center;
+    border:1px solid var(--card-border);
+    background:rgba(255,255,255,0.04);
+    border-radius:var(--radius-sm);
+    padding:0 12px;
+    transition:border-color .15s;
+  }
+  .search-field:focus-within{border-color:var(--accent);}
+  .search-field svg{width:16px; height:16px; fill:var(--text-2); flex:none;}
+  .search-field input{
+    flex:1; border:none; background:transparent; outline:none;
+    color:var(--text-0); font-family:var(--ff-body); font-size:14.5px;
+    padding:13px 8px;
+  }
+  .search-field input::placeholder{color:var(--text-2);}
+  .search-field.locked{border-color:var(--good);}
+
+  .dropdown{
+    position:absolute; top:calc(100% + 8px); left:0; right:58px;
+    background:#0C0916; border:1px solid var(--card-border); border-radius:var(--radius-md);
+    max-height:260px; overflow-y:auto; z-index:20;
+    box-shadow:0 20px 50px -15px rgba(0,0,0,0.7);
+    display:none;
+  }
+  .dropdown.show{display:block;}
+  .dd-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .dd-item:last-child{border-bottom:none;}
+  .dd-item:hover, .dd-item.hover{background:rgba(139,92,246,0.14);}
+  .dd-item img{width:34px; height:34px; border-radius:7px; flex:none; background:var(--bg-1);}
+  .dd-text{min-width:0;}
+  .dd-title{font-size:13.5px; font-weight:600; color:var(--text-0); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .dd-artist{font-size:11.5px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .dd-empty{padding:14px; text-align:center; font-size:12.5px; color:var(--text-2);}
+
+  .action-row{display:flex; gap:10px; margin-top:14px;}
+  .skip-btn{
+    flex:1;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    padding:12px; border-radius:var(--radius-sm);
+    border:1px solid var(--card-border); background:rgba(255,255,255,0.03);
+    color:var(--text-1); font-weight:700; font-size:13.5px; cursor:pointer;
+    transition:all .15s;
+  }
+  .skip-btn:hover{border-color:var(--accent-soft); color:var(--text-0);}
+  .skip-btn svg{width:14px; height:14px; fill:currentColor;}
+  .skip-btn.muted{
+    border-color:transparent; background:transparent; color:var(--text-2);
+    font-weight:500; font-size:12.5px; padding:8px;
+  }
+  .skip-btn.muted svg{opacity:0.6;}
+  .skip-btn.muted:hover{color:var(--text-1); border-color:transparent;}
+  .skip-btn:disabled{opacity:0.35; cursor:not-allowed;}
+
+  /* -------- banner / reveal -------- */
+  .banner{
+    display:none;
+    align-items:center; gap:10px;
+    padding:12px 14px; border-radius:var(--radius-sm);
+    font-size:13.5px; font-weight:600; margin-bottom:14px;
+  }
+  .banner.show{display:flex; animation:fadeIn .35s ease both;}
+  .banner.good{background:rgba(52,217,160,0.12); border:1px solid rgba(52,217,160,0.4); color:#B7FBE3;}
+  .banner.bad{background:rgba(248,107,122,0.12); border:1px solid rgba(248,107,122,0.4); color:#FFCBD1;}
+  .banner svg{width:18px; height:18px; flex:none;}
+
+  .reveal-card{
+    display:none;
+    align-items:center; gap:14px;
+    padding:14px; border-radius:var(--radius-md);
+    background:rgba(255,255,255,0.03); border:1px solid var(--card-border);
+    margin-bottom:16px;
+  }
+  .reveal-card.show{display:flex; animation:fadeIn .4s ease both;}
+  .reveal-card img{width:64px; height:64px; border-radius:12px; flex:none; box-shadow:0 8px 20px -6px rgba(0,0,0,0.6);}
+  .reveal-text{min-width:0; flex:1;}
+  .reveal-title{font-family:var(--ff-display); font-weight:700; font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .reveal-artist{font-size:13px; color:var(--text-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .reveal-play{
+    flex:none; width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--accent); display:flex; align-items:center; justify-content:center;
+  }
+  .reveal-play svg{width:15px; height:15px; fill:#050409;}
+
+  .next-btn{
+    display:none;
+    width:100%; padding:15px; border:none; border-radius:999px; cursor:pointer;
+    font-family:var(--ff-display); font-weight:700; font-size:15px; color:#050409;
+    background:linear-gradient(120deg, var(--good), #2DD4BF);
+    box-shadow:0 10px 26px -8px rgba(52,217,160,0.4);
+  }
+  .next-btn.show{display:block; animation:fadeIn .4s ease both;}
+  .next-btn.retry{background:linear-gradient(120deg, var(--accent-2), var(--accent)); box-shadow:0 10px 26px -8px var(--accent-soft);}
+
+  /* -------- error screen -------- */
+  .error-box{
+    margin:auto; text-align:center; padding:30px 22px;
+  }
+  .error-box h2{margin-top:0;font-family:var(--ff-display); margin:0 0 8px; font-size:19px;}
+  .error-box p{color:var(--text-1); font-size:13.5px; line-height:1.5; margin:0 0 18px;}
+  .retry-btn{
+    padding:12px 22px; border:none; border-radius:999px; cursor:pointer;
+    background:var(--accent); color:#050409; font-weight:700; font-family:var(--ff-display);
+  }
+
+  footer{
+    text-align:center; margin-top:26px; font-size:11px; color:var(--text-2); line-height:1.5;
+  }
+
+  button:focus-visible, input:focus-visible, .genre-btn:focus-visible{
+    outline:2px solid var(--accent-2); outline-offset:2px;
+  }
+
+  @media (min-width:760px){
+    #app{max-width:620px; padding:44px 24px 60px;}
+    .hero h1{font-size:38px;}
+    .game-card{padding:32px 34px 34px;}
+    .play-btn{width:104px; height:104px;}
+    .genre-grid{grid-template-columns:repeat(3, 1fr);}
+  }
+  @media (min-width:1100px){
+    #app{max-width:680px;}
+  }
+
+  @media (max-width:380px){
+    .genre-btn{padding:12px 10px; font-size:13px;}
+    .play-btn{width:82px; height:82px;}
+    .play-btn svg{width:26px; height:26px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <main>
+
+    <!-- ============ START SCREEN ============ -->
+    <section class="screen active fade-in" id="screen-start">
+      <div class="hero">
+        <h1>Errate den <span>Song</span></h1>
+        <p>Wähle ein Genre. Du startest bei <b>Easy</b> — jede richtig erratene Runde schaltet die nächste, schwerere Stufe frei, bis hin zu <b>Impossible</b>. Gehört wird dabei immer gleich lange, von 0,1 bis 16 Sekunden — schwerer werden nur die Songs, nicht die Zeit.</p>
+      </div>
+
+      <div class="section-label">Genre</div>
+      <div class="genre-grid" id="genreGrid"></div>
+
+      <button class="start-btn" id="startBtn">
+        <span class="label">Runde starten</span>
+        <span class="spinner"></span>
+      </button>
+    </section>
+
+    <!-- ============ GAME SCREEN ============ -->
+    <section class="screen" id="screen-game">
+      <div class="game-head">
+        <button class="chip-btn" id="backBtn">
+          <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+          <span id="genreLabel">Genre wechseln</span>
+        </button>
+      </div>
+
+      <div class="tier-ladder" id="tierLadder"></div>
+      <p class="tier-caption">Je weiter du kommst, desto unbekannter werden die Songs.</p>
+
+      <div class="card game-card">
+
+        <div class="dots-row" id="dotsRow"></div>
+
+        <div class="wf" id="waveform">
+          <div class="wf-layer dim" id="wfDim"></div>
+          <div class="wf-layer bright" id="wfBright"></div>
+        </div>
+        <div class="wf-meta">
+          <span>Ausschnitt</span>
+          <span><b id="curDuration">0.1s</b> / 16s</span>
+        </div>
+
+        <div class="play-zone">
+          <button class="play-btn" id="playBtn">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+
+        <div class="banner" id="banner"></div>
+        <div class="reveal-card" id="revealCard">
+          <img id="revealArt" alt="">
+          <div class="reveal-text">
+            <div class="reveal-title" id="revealTitle"></div>
+            <div class="reveal-artist" id="revealArtist"></div>
+          </div>
+          <button class="reveal-play" id="revealPlay">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+
+        <div class="guess-history" id="guessHistory"></div>
+
+        <div class="search-row" id="searchRow">
+          <div class="search-field" id="searchField">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+            <input type="text" id="searchInput" placeholder="Song suchen…" autocomplete="off">
+          </div>
+          <button class="confirm-btn" id="confirmBtn">
+            <svg viewBox="0 0 24 24"><path d="M4 12h14M13 6l6 6-6 6" stroke="#050409" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="dropdown" id="dropdown"></div>
+        </div>
+
+        <div class="action-row" id="actionRow">
+          <button class="skip-btn" id="skipBtn">
+            <svg viewBox="0 0 24 24"><path d="M6 5v14l10-7zM17 5h2v14h-2z"/></svg>
+            <span id="skipLabel">Länger hören</span>
+          </button>
+        </div>
+
+        <button class="next-btn" id="nextBtn">Weiter</button>
+      </div>
+
+      <footer>Songs &amp; Suche über die iTunes Search API. Easy zeigt bekanntere Treffer, höhere Stufen tiefere Cuts desselben Genres.</footer>
+    </section>
+
+    <!-- ============ ERROR SCREEN ============ -->
+    <section class="screen" id="screen-error">
+      <div class="error-box">
+        <h2>Keine Verbindung zu den Songs</h2>
+        <p id="errorMsg">Die Musikdaten konnten nicht geladen werden. Prüfe deine Internetverbindung und versuche es erneut.</p>
+        <button class="retry-btn" id="retryBtn">Erneut versuchen</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------------- config ---------------- */
+  const GENRES = {
+    charts:    { name:'Charts Mix', color:'#A855F7', term:'Top Hits 2024',      term2:'Charts',            filter:null },
+    pop:       { name:'Pop',        color:'#F0568F', term:'Pop Hits',           term2:'Pop Music',         filter:['pop'] },
+    hiphop:    { name:'Hip-Hop',    color:'#D6B486', term:'Hip Hop Hits',       term2:'Rap Music',         filter:['hip', 'rap'] },
+    rock:      { name:'Rock',       color:'#E0767A', term:'Rock Hits',          term2:'Rock Music',        filter:['rock'] },
+    techno:    { name:'Techno',     color:'#2DD4BF', term:'Techno Dance Hits', term2:'Electronic Music',  filter:['dance', 'electro', 'techno', 'house'] },
+    rnb:       { name:'R&B',        color:'#C4A6FF', term:'R&B Soul Hits',      term2:'Soul Music',        filter:['r&b', 'soul'] },
+    deutschrap:{ name:'Deutschrap', color:'#8B5CF6', term:'Deutschrap Hits',   term2:'Deutscher Rap',     filter:['hip', 'rap', 'deutsch'] },
+  };
+
+  const TIER_ORDER = ['easy','medium','hard','expert','impossible'];
+  const TIER_META = {
+    easy:      { name:'Easy',       color:'#2DD4BF' },
+    medium:    { name:'Medium',     color:'#D6B486' },
+    hard:      { name:'Hard',       color:'#E0767A' },
+    expert:    { name:'Expert',     color:'#F0568F' },
+    impossible:{ name:'Impossible', color:'#A855F7' },
+  };
+  const STAGE_DURATIONS = [0.1, 0.5, 1, 2, 4, 8, 16];
+  const SCALE = 16;
+  const ITUNES = 'https://itunes.apple.com/search';
+
+  /* ---------------- state ---------------- */
+  const state = {
+    genre:'charts',
+    tiers:[],          // 5 arrays of tracks, index matches TIER_ORDER
+    tierIndex:0,
+    usedIds:new Set(),
+    target:null,
+    stageIndex:0,
+    selected:null,
+    roundOver:false,
+    playTimer:null,
+  };
+  const poolCache = {}; // genreKey -> tiers[]; kept for this browser session only, cleared on full page reload
+
+  /* ---------------- helpers ---------------- */
+  const $ = id => document.getElementById(id);
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; };
+  const escapeHtml = s => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const artwork = (track, size) => track.artworkUrl100 ? track.artworkUrl100.replace('100x100', size+'x'+size) : '';
+
+  /* ---------------- static UI: genres ---------------- */
+  function buildGenreGrid(){
+    const grid = $('genreGrid');
+    grid.innerHTML = Object.entries(GENRES).map(([key, g]) => `
+      <button class="genre-btn${key===state.genre?' selected':''}" data-genre="${key}" type="button">
+        <span class="dot" style="background:${g.color}"></span><span>${g.name}</span>
+      </button>`).join('');
+    grid.querySelectorAll('.genre-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.genre = btn.dataset.genre;
+        grid.querySelectorAll('.genre-btn').forEach(b => b.classList.toggle('selected', b === btn));
+      });
+    });
+  }
+
+  function renderLadder(){
+    $('tierLadder').innerHTML = TIER_ORDER.map((key, i) => {
+      const meta = TIER_META[key];
+      const cls = i < state.tierIndex ? 'done' : (i === state.tierIndex ? 'current' : 'locked');
+      const chk = cls === 'done' ? '<svg class="chk" viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>' : '';
+      return `<div class="tier-step ${cls}" style="--tier-color:${meta.color}">${chk}<span>${meta.name}</span></div>`;
+    }).join('');
+  }
+
+  /* ---------------- networking ---------------- */
+  // Direct fetches to itunes.apple.com occasionally fail from Safari/WebKit due to
+  // inconsistent CORS headers on some CDN edges. Fall back to public CORS proxies
+  // transparently before giving up.
+  async function fetchJson(url){
+    const attempts = [
+      url,
+      'https://corsproxy.io/?url=' + encodeURIComponent(url),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    ];
+    let lastErr = new Error('no attempts made');
+    for(const attemptUrl of attempts){
+      try{
+        const res = await fetch(attemptUrl);
+        if(!res.ok){ lastErr = new Error('http ' + res.status); continue; }
+        return await res.json();
+      }catch(e){ lastErr = e; }
+    }
+    throw lastErr;
+  }
+
+  async function fetchTierPools(genreKey){
+    const g = GENRES[genreKey];
+    const queries = [g.term, g.term2];
+    const seen = new Set();
+    let combined = [];
+    for(const q of queries){
+      const url = `${ITUNES}?${new URLSearchParams({term:q, media:'music', entity:'song', limit:'100', country:'DE'})}`;
+      let data;
+      try{ data = await fetchJson(url); }catch(e){ continue; }
+      for(const t of (data.results||[])){
+        if(t.previewUrl && t.trackName && t.artistName && t.trackId && !seen.has(t.trackId)){
+          seen.add(t.trackId); combined.push(t);
+        }
+      }
+    }
+    if(g.filter){
+      const filtered = combined.filter(t => g.filter.some(f => (t.primaryGenreName||'').toLowerCase().includes(f)));
+      if(filtered.length >= 15) combined = filtered;
+    }
+    if(combined.length < 10) throw new Error('not enough tracks');
+
+    // combined[] is roughly ordered by search relevance -> treat as a popularity proxy.
+    // slice into 5 sequential tiers: earliest = best known (Easy) ... last = deepest cuts (Impossible)
+    const n = 5;
+    const size = Math.max(1, Math.ceil(combined.length / n));
+    const tiers = [];
+    for(let i=0;i<n;i++){
+      let slice = combined.slice(i*size, (i+1)*size);
+      if(slice.length === 0) slice = combined.slice(-Math.min(4, combined.length));
+      tiers.push(slice);
+    }
+    return tiers;
+  }
+
+  async function liveSearch(query){
+    const url = `${ITUNES}?${new URLSearchParams({term:query, media:'music', entity:'song', limit:'9', country:'DE'})}`;
+    try{
+      const data = await fetchJson(url);
+      return (data.results || []).filter(t => t.trackId && t.trackName && t.artistName);
+    }catch(e){ return []; }
+  }
+
+  /* ---------------- screen flow ---------------- */
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    $(id).classList.remove('fade-in'); void $(id).offsetWidth; $(id).classList.add('fade-in');
+  }
+
+  $('startBtn').addEventListener('click', async () => {
+    const btn = $('startBtn');
+    if(poolCache[state.genre]){
+      state.tiers = poolCache[state.genre];
+      state.tierIndex = 0;
+      state.usedIds = new Set();
+      $('genreLabel').textContent = GENRES[state.genre].name + ' · wechseln';
+      renderLadder();
+      showScreen('screen-game');
+      startNewRound();
+      return;
+    }
+    btn.classList.add('loading'); btn.disabled = true;
+    try{
+      const tiers = await fetchTierPools(state.genre);
+      poolCache[state.genre] = tiers;
+      state.tiers = tiers;
+      state.tierIndex = 0;
+      state.usedIds = new Set();
+      $('genreLabel').textContent = GENRES[state.genre].name + ' · wechseln';
+      renderLadder();
+      showScreen('screen-game');
+      startNewRound();
+    }catch(e){
+      $('errorMsg').textContent = 'Konnte keine Songs für "' + GENRES[state.genre].name + '" laden. Prüfe deine Internetverbindung.';
+      showScreen('screen-error');
+    }finally{
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
+  });
+
+  $('retryBtn').addEventListener('click', () => { showScreen('screen-start'); });
+  $('backBtn').addEventListener('click', () => { stopAudio(); showScreen('screen-start'); });
+
+  function pickTarget(){
+    const tierPool = state.tiers[state.tierIndex];
+    const remaining = tierPool.filter(t => !state.usedIds.has(t.trackId));
+    const pool = remaining.length ? remaining : tierPool;
+    const track = pool[Math.floor(Math.random()*pool.length)];
+    state.usedIds.add(track.trackId);
+    return track;
+  }
+
+  function startNewRound(){
+    stopAudio();
+    state.target = pickTarget();
+    state.stageIndex = 0;
+    state.selected = null;
+    state.roundOver = false;
+
+    $('audio').src = state.target.previewUrl;
+    $('audio').load();
+
+    $('banner').className = 'banner';
+    $('banner').innerHTML = '';
+    $('revealCard').classList.remove('show');
+    $('nextBtn').classList.remove('show');
+    $('guessHistory').innerHTML = '';
+    $('searchInput').value = '';
+    $('searchField').classList.remove('locked');
+    $('confirmBtn').classList.remove('show');
+    $('dropdown').classList.remove('show');
+    $('skipBtn').disabled = false;
+    $('searchRow').style.display = '';
+    $('actionRow').style.display = '';
+
+    renderLadder();
+    buildWaveform();
+    renderDots();
+    updateStageMeta();
+  }
+
+  /* ---------------- waveform ---------------- */
+  function buildWaveform(){
+    const bars = 46;
+    let html = '';
+    for(let i=0;i<bars;i++){
+      const h = 16 + Math.abs(Math.sin(i*0.85 + (state.target.trackId % 7))) * 58 + Math.random()*14;
+      html += `<div class="wf-bar" style="height:${h.toFixed(0)}%"></div>`;
+    }
+    $('wfDim').innerHTML = html;
+    $('wfBright').innerHTML = html;
+    $('wfBright').style.transition = 'none';
+    $('wfBright').style.clipPath = 'inset(0 100% 0 0)';
+  }
+
+  function animateWaveform(durationSec){
+    const bright = $('wfBright');
+    bright.style.transition = 'none';
+    bright.style.clipPath = 'inset(0 100% 0 0)';
+    void bright.offsetWidth;
+    const targetPct = Math.min(100, (durationSec / SCALE) * 100);
+    bright.style.transition = `clip-path ${durationSec}s linear`;
+    requestAnimationFrame(() => { bright.style.clipPath = `inset(0 ${100 - targetPct}% 0 0)`; });
+  }
+
+  function resetWaveformFill(){
+    const bright = $('wfBright');
+    bright.style.transition = 'none';
+    bright.style.clipPath = 'inset(0 100% 0 0)';
+  }
+
+  /* ---------------- duration dots ---------------- */
+  function renderDots(){
+    const row = $('dotsRow');
+    row.innerHTML = '';
+    STAGE_DURATIONS.forEach((d, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'dot-wrap';
+      wrap.innerHTML = `<div class="dot" data-i="${i}"></div><span>${d}s</span>`;
+      row.appendChild(wrap);
+    });
+    highlightCurrentDot();
+  }
+
+  function highlightCurrentDot(){
+    document.querySelectorAll('#dotsRow .dot').forEach(d => {
+      const i = Number(d.dataset.i);
+      d.classList.toggle('current', i === state.stageIndex && !state.roundOver);
+    });
+  }
+
+  function markDot(i, cls){
+    const d = document.querySelector(`#dotsRow .dot[data-i="${i}"]`);
+    if(d){ d.classList.remove('current'); d.classList.add(cls); }
+  }
+
+  function updateStageMeta(){
+    $('curDuration').textContent = STAGE_DURATIONS[state.stageIndex] + 's';
+    const lastStage = state.stageIndex >= STAGE_DURATIONS.length - 1;
+    $('skipLabel').textContent = lastStage ? 'Kein längerer Ausschnitt' : 'Länger hören';
+    $('skipBtn').classList.toggle('muted', lastStage);
+    $('skipBtn').disabled = state.roundOver;
+  }
+
+  /* ---------------- audio playback ---------------- */
+  const audioEl = () => $('audio');
+  const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
+  const ICON_PAUSE = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+
+  function stopAudio(){
+    const a = audioEl();
+    a.pause();
+    clearTimeout(state.playTimer);
+  }
+
+  // Reliably (re)start playback from the very beginning of the preview clip.
+  // Setting currentTime before metadata is loaded is unreliable in several
+  // browsers, so we wait for 'loadedmetadata' when needed.
+  function playFromStart(after){
+    const a = audioEl();
+    const begin = () => {
+      a.currentTime = 0;
+      const p = a.play();
+      if(p && p.catch) p.catch(()=>{});
+      if(after) after();
+    };
+    if(a.readyState >= 1){ begin(); }
+    else{ a.addEventListener('loadedmetadata', begin, { once:true }); }
+  }
+
+  audioEl().addEventListener('play', () => {
+    $('playBtn').classList.add('playing');
+    $('playIcon').innerHTML = ICON_PAUSE;
+    if($('revealCard').classList.contains('show')) $('revealPlay').innerHTML = '<svg viewBox="0 0 24 24">'+ICON_PAUSE+'</svg>';
+  });
+  audioEl().addEventListener('pause', () => {
+    $('playBtn').classList.remove('playing');
+    $('playIcon').innerHTML = ICON_PLAY;
+    if($('revealCard').classList.contains('show')) $('revealPlay').innerHTML = '<svg viewBox="0 0 24 24">'+ICON_PLAY+'</svg>';
+  });
+
+  $('playBtn').addEventListener('click', () => {
+    if(state.roundOver){ toggleFullPreview(); return; }
+    playCurrentSnippet();
+  });
+
+  function playCurrentSnippet(){
+    const dur = STAGE_DURATIONS[state.stageIndex];
+    clearTimeout(state.playTimer);
+    playFromStart(() => {
+      animateWaveform(dur);
+      state.playTimer = setTimeout(() => { audioEl().pause(); }, dur*1000);
+    });
+  }
+
+  function toggleFullPreview(){
+    const a = audioEl();
+    if(a.paused) playFromStart(); else a.pause();
+  }
+  $('revealPlay').addEventListener('click', toggleFullPreview);
+
+  /* ---------------- search / autocomplete ---------------- */
+  let ddItems = [];
+
+  function poolMatches(query){
+    const q = query.toLowerCase();
+    const all = state.tiers.flat();
+    return all.filter(t => t.trackName.toLowerCase().includes(q) || t.artistName.toLowerCase().includes(q));
+  }
+
+  const doLiveSearch = debounce(async (query) => {
+    const local = poolMatches(query);
+    const live = await liveSearch(query);
+    const merged = [...local];
+    const seen = new Set(local.map(t => t.trackId));
+    for(const t of live){ if(!seen.has(t.trackId)){ seen.add(t.trackId); merged.push(t); } }
+    renderDropdown(merged.slice(0, 8), query);
+  }, 320);
+
+  $('searchInput').addEventListener('input', (e) => {
+    state.selected = null;
+    $('confirmBtn').classList.remove('show');
+    $('searchField').classList.remove('locked');
+    const q = e.target.value.trim();
+    if(q.length < 2){ $('dropdown').classList.remove('show'); return; }
+    $('dropdown').innerHTML = '<div class="dd-empty">Suche…</div>';
+    $('dropdown').classList.add('show');
+    doLiveSearch(q);
+  });
+
+  function renderDropdown(items, query){
+    ddItems = items;
+    const dd = $('dropdown');
+    if(!items.length){
+      dd.innerHTML = `<div class="dd-empty">Keine Songs gefunden für "${escapeHtml(query)}"</div>`;
+      dd.classList.add('show');
+      return;
+    }
+    dd.innerHTML = items.map((t, i) => `
+      <div class="dd-item" data-i="${i}">
+        <img src="${artwork(t,60)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="dd-text">
+          <div class="dd-title">${escapeHtml(t.trackName)}</div>
+          <div class="dd-artist">${escapeHtml(t.artistName)}</div>
+        </div>
+      </div>`).join('');
+    dd.classList.add('show');
+    dd.querySelectorAll('.dd-item').forEach(el => {
+      el.addEventListener('click', () => selectGuess(ddItems[Number(el.dataset.i)]));
+    });
+  }
+
+  function selectGuess(track){
+    state.selected = track;
+    $('searchInput').value = `${track.trackName} — ${track.artistName}`;
+    $('dropdown').classList.remove('show');
+    $('confirmBtn').classList.add('show');
+    $('searchField').classList.add('locked');
+  }
+
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('.search-row')) $('dropdown').classList.remove('show');
+  });
+
+  $('searchInput').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && state.selected) submitGuess();
+  });
+  $('confirmBtn').addEventListener('click', submitGuess);
+
+  /* ---------------- guessing logic ---------------- */
+  function submitGuess(){
+    if(!state.selected || state.roundOver) return;
+    const correct = state.selected.trackId === state.target.trackId;
+    const stage = state.stageIndex;
+
+    if(correct){
+      markDot(stage, 'correct');
+      finishRound(true);
+    }else{
+      markDot(stage, 'wrong');
+      addHistoryChip(`${state.selected.trackName} — ${state.selected.artistName}`);
+      if(stage + 1 >= STAGE_DURATIONS.length){
+        finishRound(false);
+      }else{
+        state.stageIndex++;
+        clearSelection();
+        highlightCurrentDot();
+        updateStageMeta();
+        showBanner('bad', 'Leider falsch — nächster, längerer Ausschnitt.');
+      }
+    }
+  }
+
+  $('skipBtn').addEventListener('click', () => {
+    if(state.roundOver) return;
+    if(state.stageIndex + 1 >= STAGE_DURATIONS.length){ finishRound(false); return; }
+    markDot(state.stageIndex, 'skipped');
+    state.stageIndex++;
+    clearSelection();
+    highlightCurrentDot();
+    updateStageMeta();
+  });
+
+  function clearSelection(){
+    state.selected = null;
+    $('searchInput').value = '';
+    $('confirmBtn').classList.remove('show');
+    $('searchField').classList.remove('locked');
+    stopAudio();
+    resetWaveformFill();
+  }
+
+  function addHistoryChip(text){
+    const chip = document.createElement('div');
+    chip.className = 'hist-chip';
+    chip.innerHTML = `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29-1.42 1.42L10.59 13.4 4.3 19.7l-1.42-1.42L9.17 12 2.88 5.71 4.3 4.29l6.29 6.3 6.3-6.3z"/></svg>${escapeHtml(text)}`;
+    $('guessHistory').appendChild(chip);
+  }
+
+  function showBanner(type, text){
+    const b = $('banner');
+    b.className = 'banner show ' + type;
+    const icon = type === 'good'
+      ? '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>';
+    b.innerHTML = icon + '<span>' + text + '</span>';
+  }
+
+  function finishRound(won){
+    state.roundOver = true;
+    stopAudio();
+    highlightCurrentDot();
+    $('confirmBtn').classList.remove('show');
+    $('searchInput').value = '';
+    $('dropdown').classList.remove('show');
+    $('searchRow').style.display = 'none';
+    $('actionRow').style.display = 'none';
+
+    const t = state.target;
+    $('revealArt').src = artwork(t, 200);
+    $('revealTitle').textContent = t.trackName;
+    $('revealArtist').textContent = t.artistName;
+    $('revealCard').classList.add('show');
+
+    const nextBtn = $('nextBtn');
+    nextBtn.classList.add('show');
+    nextBtn.classList.remove('retry');
+
+    if(won){
+      const isLast = state.tierIndex >= TIER_ORDER.length - 1;
+      if(isLast){
+        showBanner('good', 'Alle Stufen gemeistert — bis hin zu Impossible!');
+        nextBtn.textContent = 'Nochmal von vorn (Easy)';
+        nextBtn.onclick = () => { state.tierIndex = 0; startNewRound(); };
+      }else{
+        const nextName = TIER_META[TIER_ORDER[state.tierIndex+1]].name;
+        showBanner('good', 'Richtig erkannt! Stufe ' + nextName + ' freigeschaltet.');
+        nextBtn.textContent = 'Weiter zu ' + nextName + ' →';
+        nextBtn.onclick = () => { state.tierIndex++; startNewRound(); };
+      }
+      // song is revealed — play the full preview automatically, from the start; user can pause it.
+      playFromStart();
+    }else{
+      showBanner('bad', 'Runde verloren — das war der richtige Song:');
+      nextBtn.classList.add('retry');
+      nextBtn.textContent = 'Nochmal versuchen';
+      nextBtn.onclick = () => { startNewRound(); };
+    }
+  }
+
+  /* ---------------- init ---------------- */
+  buildGenreGrid();
+
+})();
+</script>
+</body>
+</html>
